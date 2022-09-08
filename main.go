@@ -2,11 +2,13 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 
 	tg "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 
 	"github.com/ariel17/golang-telegram-group-manager/config"
+	"github.com/ariel17/golang-telegram-group-manager/services"
 )
 
 func main() {
@@ -28,7 +30,12 @@ func main() {
 		b, _ := json.Marshal(update)
 		log.Printf("New message: %s", b)
 
-		if !update.Message.IsCommand() {
+		if update.Message == nil {
+			continue
+		}
+
+		if !update.Message.IsCommand() && !services.IsCommand(update.Message.Text) {
+			services.SetActivityForUser(*update.Message)
 			continue
 		}
 
@@ -41,13 +48,24 @@ func main() {
 
 		switch command {
 		case config.Help,
-			config.Inactives,
-			config.Start,
-			config.Welcome,
-			config.KickInactives:
+			config.Start:
+			text = services.GetHelpMessage()
+		case config.Inactives:
+			inactives, err := services.GetInactives(update.Message.Text)
+			if err != nil {
+				text = fmt.Sprintf("Cannot understand that. The problem was: %v", err)
+			} else {
+				text = services.FormatInactivesMessage(inactives)
+			}
+		case config.KickInactives:
 			text = descriptions[command]
+		case config.Welcome:
+			text = services.GetWelcome()
+		case config.SetWelcome:
+			services.SetWelcome(update.Message.Text)
+			text = "Welcome message updated :)"
 		default:
-			text = descriptions[config.Unknown]
+			text = "I don't know this command :("
 		}
 		log.Printf("Text to send is: %s", text)
 
