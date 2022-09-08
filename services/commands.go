@@ -2,7 +2,6 @@ package services
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/ariel17/golang-telegram-group-manager/config"
 )
@@ -14,14 +13,4 @@ func GetHelpMessage() string {
 		text += fmt.Sprintf("/%s: %s\n", k, v)
 	}
 	return text
-}
-
-// IsCommand checks on the text message if it starts with a bot command.
-func IsCommand(text string) bool {
-	for k, _ := range config.GetDescriptions() {
-		if strings.HasPrefix(text, fmt.Sprintf("/%s", k)) {
-			return true
-		}
-	}
-	return false
 }

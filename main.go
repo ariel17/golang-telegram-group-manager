@@ -34,7 +34,7 @@ func main() {
 			continue
 		}
 
-		if !update.Message.IsCommand() && !services.IsCommand(update.Message.Text) {
+		if !update.Message.IsCommand() {
 			services.SetActivityForUser(*update.Message)
 			continue
 		}
