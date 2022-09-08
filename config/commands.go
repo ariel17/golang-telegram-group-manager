@@ -1,15 +1,22 @@
 package config
 
-const (
-	Start         = "start"
-	Help          = "help"
-	Inactives     = "inactives"
-	KickInactives = "kickinactives"
-	Welcome       = "welcome"
-	Unknown       = "I don't know this command"
+import (
+	"fmt"
 )
 
-var descriptions map[string]string
+const (
+	Start           = "start"
+	Help            = "help"
+	Inactives       = "inactives"
+	KickInactives   = "kickinactives"
+	Welcome         = "welcome"
+	SetWelcome      = "setwelcome"
+	helpDescription = "Shows command usage."
+)
+
+var (
+	descriptions map[string]string
+)
 
 // GetDescriptions returns a map of descriptions on existing commands.
 func GetDescriptions() map[string]string {
@@ -18,10 +25,11 @@ func GetDescriptions() map[string]string {
 
 func init() {
 	descriptions = map[string]string{
-		Start:         "This is the start command",
-		Help:          "This is the help command",
-		Inactives:     "This is the inactive command",
+		Start:         helpDescription,
+		Help:          helpDescription,
+		Inactives:     fmt.Sprintf("Returns the list of inactive users in a time period. Usage: /%s 30d", Inactives),
 		KickInactives: "This is the kick inactive command",
-		Welcome:       "This is the welcome message",
+		Welcome:       "Shows the welcome message.",
+		SetWelcome:    fmt.Sprintf("Saves a new welcome message. Usage: /%s <text>", SetWelcome),
 	}
 }
