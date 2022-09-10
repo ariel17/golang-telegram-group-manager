@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	tg "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -39,13 +40,13 @@ func SetActivityForUser(message tg.Message) {
 
 // GetInactives returns the list of users without activity for the indicated
 // time delta.
-func GetInactives(duration string) ([]UserActivity, error) {
-	duration = removeCommandFromText(duration, config.Inactives)
-	d, err := time.ParseDuration(duration)
+func GetInactives(duration, command string) ([]UserActivity, error) {
+	parsedDuration := removeCommandFromText(duration, command)
+	days, err := strconv.Atoi(parsedDuration)
 	if err != nil {
 		return nil, err
 	}
-	limit := time.Now().Add(-d)
+	limit := time.Now().AddDate(0, 0, -days)
 
 	inactives := []UserActivity{}
 	for _, activity := range activities {
@@ -56,15 +57,36 @@ func GetInactives(duration string) ([]UserActivity, error) {
 	return inactives, nil
 }
 
-func FormatInactivesMessage(inactives []UserActivity) string {
+func FormatInactivesMessage(title string, inactives []UserActivity) string {
 	if len(inactives) == 0 {
-		return "No inactive users :)"
+		return "No inactive users 🙌🏽"
 	}
 
-	text := "Inactive users:\n"
+	text := title
 	for _, activity := range inactives {
 		user := activity.Message.From
-		text += fmt.Sprintf("* %s (%d): %v\n", user.UserName, user.ID, activity.LastSeen())
+		lastSeen := activity.LastSeen().Format("2006-01-02 15:04")
+		text += fmt.Sprintf("* @%s: %s\n", user.UserName, lastSeen)
 	}
 	return text
+}
+
+// KickInactives removes the inactive users
+func KickInactives(duration string, bot *tg.BotAPI, chat tg.Chat) ([]UserActivity, error) {
+	inactives, err := GetInactives(duration, config.KickInactives)
+	if err != nil {
+		return nil, err
+	}
+	for _, user := range inactives {
+		c := tg.KickChatMemberConfig{
+			ChatMemberConfig: tg.ChatMemberConfig{
+				ChatID: chat.ID,
+				UserID: user.Message.From.ID,
+			},
+			UntilDate:      0,
+			RevokeMessages: false,
+		}
+		tg.Edit
+	}
+	return inactives, nil
 }
