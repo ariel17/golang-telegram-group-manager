@@ -16,6 +16,9 @@ func SetWelcome(text string) {
 
 // GetWelcome returns the saved welcome message to show.
 func GetWelcome() string {
+	if welcomeMessage == "" {
+		return fmt.Sprintf("Hello! 👋 Welcome message is empty. You need to set one with /%s <text>", config.SetWelcome)
+	}
 	return welcomeMessage
 }
 
