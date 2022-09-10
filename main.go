@@ -40,9 +40,8 @@ func main() {
 		}
 
 		var (
-			text         string
-			descriptions = config.GetDescriptions()
-			command      = update.Message.Command()
+			text    string
+			command = update.Message.Command()
 		)
 		log.Printf("Command is: %s", command)
 
@@ -51,21 +50,26 @@ func main() {
 			config.Start:
 			text = services.GetHelpMessage()
 		case config.Inactives:
-			inactives, err := services.GetInactives(update.Message.Text)
+			inactives, err := services.GetInactives(update.Message.Text, config.Inactives)
 			if err != nil {
-				text = fmt.Sprintf("Cannot understand that. The problem was: %v", err)
+				text = errorToText(err)
 			} else {
-				text = services.FormatInactivesMessage(inactives)
+				text = services.FormatInactivesMessage("😴 Inactive users:\n", inactives)
 			}
 		case config.KickInactives:
-			text = descriptions[command]
+			inactives, err := services.KickInactives(update.Message.Text)
+			if err != nil {
+				text = errorToText(err)
+			} else {
+				text = services.FormatInactivesMessage("👋💔 Kicked users:\n", inactives)
+			}
 		case config.Welcome:
 			text = services.GetWelcome()
 		case config.SetWelcome:
 			services.SetWelcome(update.Message.Text)
-			text = "Welcome message updated :)"
+			text = "Welcome message updated 🙌🏽"
 		default:
-			text = "I don't know this command :("
+			text = "I don't know this command 🤷🏽"
 		}
 		log.Printf("Text to send is: %s", text)
 
@@ -74,4 +78,8 @@ func main() {
 			log.Panic(err)
 		}
 	}
+}
+
+func errorToText(err error) string {
+	return fmt.Sprintf("Could not complete that 🤔 The problem was: %v", err)
 }
