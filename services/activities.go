@@ -84,6 +84,7 @@ func KickInactives(duration string) ([]UserActivity, error) {
 	return inactives, nil
 }
 
+// DebugHandler TODO
 func DebugHandler(bot *telego.Bot, update telego.Update) {
 	b, _ := json.Marshal(activities)
 	_, err := bot.SendMessage(

@@ -11,6 +11,7 @@ const (
 	KickInactives   = "kickinactives"
 	Welcome         = "welcome"
 	SetWelcome      = "setwelcome"
+	Stats           = "stats"
 	helpDescription = "Shows command usage."
 )
 
@@ -34,5 +35,6 @@ func init() {
 		KickInactives: kickInactives,
 		Welcome:       "Shows the welcome message.",
 		SetWelcome:    setWelcome,
+		Stats:         "Show user stats",
 	}
 }
