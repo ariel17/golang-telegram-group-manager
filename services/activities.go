@@ -1,15 +1,10 @@
 package services
 
 import (
-	"encoding/json"
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/mymmrac/telego"
-	tu "github.com/mymmrac/telego/telegoutil"
-
-	"github.com/ariel17/golang-telegram-group-manager/config"
 )
 
 type UserActivity struct {
@@ -27,13 +22,10 @@ var (
 func SetActivityForUser(message telego.Message) {
 	v, exists := activities[message.From.ID]
 	if !exists {
-		activities[message.From.ID] = UserActivity{
+		v = UserActivity{
 			ID:       message.From.ID,
 			Username: message.From.Username,
-			LastSeen: time.Unix(message.Date, 0),
-			Count:    1,
 		}
-		return
 	}
 	v.LastSeen = time.Unix(message.Date, 0)
 	v.Count += 1
@@ -42,28 +34,21 @@ func SetActivityForUser(message telego.Message) {
 
 // GetInactives returns the list of users without activity for the indicated
 // time delta.
-func GetInactives(duration, command string) ([]UserActivity, error) {
-	parsedDuration := removeCommandFromText(duration, command)
-	days, err := strconv.Atoi(parsedDuration)
-	if err != nil {
-		return nil, err
-	}
+func GetInactives(days int) []UserActivity {
 	limit := time.Now().AddDate(0, 0, -days)
-
 	inactives := []UserActivity{}
 	for _, activity := range activities {
 		if activity.LastSeen.Before(limit) {
 			inactives = append(inactives, activity)
 		}
 	}
-	return inactives, nil
+	return inactives
 }
 
 func FormatInactivesMessage(title string, inactives []UserActivity) string {
 	if len(inactives) == 0 {
 		return "No inactive users 🙌🏽"
 	}
-
 	text := title
 	for _, activity := range inactives {
 		lastSeen := activity.LastSeen.Format("2006-01-02 15:04")
@@ -73,24 +58,23 @@ func FormatInactivesMessage(title string, inactives []UserActivity) string {
 }
 
 // KickInactives removes the inactive users
-func KickInactives(duration string) ([]UserActivity, error) {
-	inactives, err := GetInactives(duration, config.KickInactives)
-	if err != nil {
-		return nil, err
-	}
+func KickInactives(days int) []UserActivity {
+	inactives := GetInactives(days)
 	for range inactives {
 		// TODO kick user
 	}
-	return inactives, nil
+	return inactives
 }
 
-// DebugHandler TODO
-func DebugHandler(bot *telego.Bot, update telego.Update) {
-	b, _ := json.Marshal(activities)
-	_, err := bot.SendMessage(
-		tu.Message(tu.ID(update.Message.Chat.ID), fmt.Sprintf("Activities: %s", b)),
-	)
-	if err != nil {
-		panic(err)
+// GetStatistics returns the amount of messages sent by user and last seen time.
+func GetStatistics() string {
+	if len(activities) == 0 {
+		return "I don't have statistics yet 🤷"
 	}
+	text := "📈 User statistics:\n"
+	for _, activity := range activities {
+		lastSeen := activity.LastSeen.Format("2006-01-02 15:04")
+		text += fmt.Sprintf("* @%s: messages: %d, last seen on: %s\n", activity.Username, activity.Count, lastSeen)
+	}
+	return text
 }

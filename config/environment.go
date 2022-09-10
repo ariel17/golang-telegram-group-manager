@@ -1,7 +1,6 @@
 package config
 
 import (
-	"errors"
 	"os"
 )
 
@@ -14,8 +13,4 @@ func GetTelegramApiToken() string {
 
 func init() {
 	telegramApiToken = os.Getenv("TELEGRAM_API_TOKEN")
-	if telegramApiToken == "" {
-		panic(errors.New("telegram api token is required"))
-	}
-
 }

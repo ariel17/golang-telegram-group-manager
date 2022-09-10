@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/mymmrac/telego"
 	th "github.com/mymmrac/telego/telegohandler"
@@ -12,32 +14,25 @@ import (
 )
 
 // ConfigureHandlers TODO
-func ConfigureHandlers(bot *telego.Bot) {
-	updates, _ := bot.UpdatesViaLongPulling(nil)
-	defer bot.StopLongPulling()
-
-	bh, _ := th.NewBotHandler(bot, updates)
-	defer bh.Stop()
-
+func ConfigureHandlers(bh *th.BotHandler) {
 	bh.Handle(helpHandler, th.CommandEqual(config.Help))
 	bh.Handle(helpHandler, th.CommandEqual(config.Start))
 	bh.Handle(welcomeHandler, th.CommandEqual(config.Welcome))
 	bh.Handle(setWelcomeHandler, th.CommandEqual(config.SetWelcome))
 	bh.Handle(inactivesHandler, th.CommandEqual(config.Inactives))
 	bh.Handle(kickInactivesHandler, th.CommandEqual(config.KickInactives))
-	// TODO stats handler
-
-	bh.Handle(services.DebugHandler, th.CommandEqual("debug"))
+	bh.Handle(statsHandler, th.CommandEqual(config.Stats))
 
 	bh.Handle(defaultHandler, th.AnyCommand())
 	bh.Handle(activityHandler, th.AnyMessage())
+
+	defer bh.Stop()
 	bh.Start()
 }
 
 func helpHandler(bot *telego.Bot, update telego.Update) {
 	_, err := bot.SendMessage(tu.Message(
-		tu.ID(update.Message.Chat.ID),
-		services.GetHelpMessage(),
+		tu.ID(update.Message.Chat.ID), services.GetHelpMessage(),
 	))
 	if err != nil {
 		panic(err)
@@ -46,8 +41,7 @@ func helpHandler(bot *telego.Bot, update telego.Update) {
 
 func welcomeHandler(bot *telego.Bot, update telego.Update) {
 	_, err := bot.SendMessage(tu.Message(
-		tu.ID(update.Message.Chat.ID),
-		services.GetWelcome(),
+		tu.ID(update.Message.Chat.ID), services.GetWelcome(),
 	))
 	if err != nil {
 		panic(err)
@@ -55,10 +49,10 @@ func welcomeHandler(bot *telego.Bot, update telego.Update) {
 }
 
 func setWelcomeHandler(bot *telego.Bot, update telego.Update) {
-	services.SetWelcome(update.Message.Text)
+	text := removeCommandFromText(update.Message.Text, config.SetWelcome)
+	services.SetWelcome(text)
 	_, err := bot.SendMessage(tu.Message(
-		tu.ID(update.Message.Chat.ID),
-		"Welcome message updated 🙌🏽",
+		tu.ID(update.Message.Chat.ID), "Welcome message updated 🙌🏽",
 	))
 	if err != nil {
 		panic(err)
@@ -66,13 +60,19 @@ func setWelcomeHandler(bot *telego.Bot, update telego.Update) {
 }
 
 func inactivesHandler(bot *telego.Bot, update telego.Update) {
-	var text string
-	inactives, err := services.GetInactives(update.Message.Text, config.Inactives)
+	var (
+		text      string
+		duration  = removeCommandFromText(update.Message.Text, config.Inactives)
+		days, err = strconv.Atoi(duration)
+	)
+
 	if err != nil {
 		text = errorToText(err)
 	} else {
+		inactives := services.GetInactives(days)
 		text = services.FormatInactivesMessage("😴 Inactive users:\n", inactives)
 	}
+
 	_, err = bot.SendMessage(tu.Message(tu.ID(update.Message.Chat.ID), text))
 	if err != nil {
 		panic(err)
@@ -80,13 +80,19 @@ func inactivesHandler(bot *telego.Bot, update telego.Update) {
 }
 
 func kickInactivesHandler(bot *telego.Bot, update telego.Update) {
-	var text string
-	inactives, err := services.KickInactives(update.Message.Text)
+	var (
+		text      string
+		duration  = removeCommandFromText(update.Message.Text, config.KickInactives)
+		days, err = strconv.Atoi(duration)
+	)
+
 	if err != nil {
 		text = errorToText(err)
 	} else {
+		inactives := services.KickInactives(days)
 		text = services.FormatInactivesMessage("👋💔 Kicked users:\n", inactives)
 	}
+
 	_, err = bot.SendMessage(tu.Message(tu.ID(update.Message.Chat.ID), text))
 	if err != nil {
 		panic(err)
@@ -106,6 +112,19 @@ func defaultHandler(bot *telego.Bot, update telego.Update) {
 	}
 }
 
+func statsHandler(bot *telego.Bot, update telego.Update) {
+	_, err := bot.SendMessage(
+		tu.Message(tu.ID(update.Message.Chat.ID), services.GetStatistics()),
+	)
+	if err != nil {
+		panic(err)
+	}
+}
+
 func errorToText(err error) string {
 	return fmt.Sprintf("Could not complete that 🤔 The problem was: %v", err)
+}
+
+func removeCommandFromText(text, command string) string {
+	return strings.ReplaceAll(text, fmt.Sprintf("/%s ", command), "")
 }

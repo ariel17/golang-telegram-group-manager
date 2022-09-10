@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/mymmrac/telego"
+	th "github.com/mymmrac/telego/telegohandler"
 
 	"github.com/ariel17/golang-telegram-group-manager/config"
 	"github.com/ariel17/golang-telegram-group-manager/handlers"
@@ -21,5 +22,15 @@ func main() {
 	}
 	log.Printf("Authorized on account %s", me.Username)
 
-	handlers.ConfigureHandlers(bot)
+	updates, err := bot.UpdatesViaLongPulling(nil)
+	if err != nil {
+		panic(err)
+	}
+	defer bot.StopLongPulling()
+
+	bh, err := th.NewBotHandler(bot, updates)
+	if err != nil {
+		panic(err)
+	}
+	handlers.ConfigureHandlers(bh)
 }
