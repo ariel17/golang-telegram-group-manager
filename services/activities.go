@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/mymmrac/telego"
@@ -25,7 +26,7 @@ func SetActivityForUser(message telego.Message) {
 	if !exists {
 		v = UserActivity{
 			ID:       message.From.ID,
-			Username: message.From.Username,
+			Username: determineUsername(*message.From),
 		}
 	}
 	v.LastSeen = time.Unix(message.Date, 0)
@@ -85,4 +86,12 @@ func GetStatistics() string {
 		text += fmt.Sprintf("* @%s: messages: %d, last seen on: %s\n", activity.Username, activity.Count, lastSeen)
 	}
 	return text
+}
+
+func determineUsername(user telego.User) string {
+	if user.Username != "" {
+		return user.Username
+	}
+	v := fmt.Sprintf("%s %s", user.FirstName, user.LastName)
+	return strings.TrimSpace(v)
 }
