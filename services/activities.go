@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/mymmrac/telego"
+	tu "github.com/mymmrac/telego/telegoutil"
 )
 
 type UserActivity struct {
@@ -58,12 +59,19 @@ func FormatInactivesMessage(title string, inactives []UserActivity) string {
 }
 
 // KickInactives removes the inactive users
-func KickInactives(days int) []UserActivity {
+func KickInactives(days int, bot *telego.Bot, update telego.Update) ([]UserActivity, error) {
 	inactives := GetInactives(days)
-	for range inactives {
-		// TODO kick user
+	for _, inactive := range inactives {
+		unbanParams := telego.UnbanChatMemberParams{
+			ChatID: tu.ID(update.Message.Chat.ID),
+			UserID: inactive.ID,
+		}
+		err := bot.UnbanChatMember(&unbanParams)
+		if err != nil {
+			return nil, err
+		}
 	}
-	return inactives
+	return inactives, nil
 }
 
 // GetStatistics returns the amount of messages sent by user and last seen time.

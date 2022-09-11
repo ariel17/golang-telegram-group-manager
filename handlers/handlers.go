@@ -89,8 +89,13 @@ func kickInactivesHandler(bot *telego.Bot, update telego.Update) {
 	if err != nil {
 		text = errorToText(err)
 	} else {
-		inactives := services.KickInactives(days)
-		text = services.FormatInactivesMessage("👋💔 Kicked users:\n", inactives)
+		inactives, err := services.KickInactives(days, bot, update)
+		if err != nil {
+			text = errorToText(err)
+		} else {
+			text = services.FormatInactivesMessage("👋💔 Kicked users:\n", inactives)
+
+		}
 	}
 
 	_, err = bot.SendMessage(tu.Message(tu.ID(update.Message.Chat.ID), text))
@@ -100,6 +105,9 @@ func kickInactivesHandler(bot *telego.Bot, update telego.Update) {
 }
 
 func activityHandler(_ *telego.Bot, update telego.Update) {
+	if update.Message.From.IsBot {
+		return
+	}
 	services.SetActivityForUser(*update.Message)
 }
 
