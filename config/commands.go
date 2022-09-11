@@ -17,8 +17,8 @@ const (
 
 var (
 	descriptions  map[string]string
-	inactives     = fmt.Sprintf("Returns the list of inactive users in days period. Usage: /%s 30", Inactives)
-	kickInactives = fmt.Sprintf("Removes all inactive users from group in a time period. Usage: /%s 30", KickInactives)
+	inactives     = fmt.Sprintf("Returns the list of inactive users in days period. Usage: /%s <days>", Inactives)
+	kickInactives = fmt.Sprintf("Removes all inactive users from group in a time period. Usage: /%s <days>", KickInactives)
 	setWelcome    = fmt.Sprintf("Saves a new welcome message. Usage: /%s <text>", SetWelcome)
 )
 
