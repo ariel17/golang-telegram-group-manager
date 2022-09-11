@@ -8,9 +8,9 @@ import (
 
 // GetHelpMessage shows the help text with commands usage.
 func GetHelpMessage() string {
-	text := "Available commands:\n"
+	text := "🕹Available commands:\n"
 	for k, v := range config.GetDescriptions() {
-		text += fmt.Sprintf("/%s: %s\n", k, v)
+		text += fmt.Sprintf("* /%s: %s\n", k, v)
 	}
 	return text
 }

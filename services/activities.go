@@ -17,29 +17,40 @@ type UserActivity struct {
 }
 
 var (
-	activities = map[int64]UserActivity{}
+	activities = map[int64]map[int64]UserActivity{}
 )
 
 // SetActivityForUser saves the last sent message
 func SetActivityForUser(message telego.Message) {
-	v, exists := activities[message.From.ID]
+	chat, exists := activities[message.Chat.ID]
 	if !exists {
-		v = UserActivity{
+		chat = map[int64]UserActivity{}
+	}
+
+	activity, exists := chat[message.From.ID]
+	if !exists {
+		activity = UserActivity{
 			ID:       message.From.ID,
 			Username: determineUsername(*message.From),
 		}
 	}
-	v.LastSeen = time.Unix(message.Date, 0)
-	v.Count += 1
-	activities[message.From.ID] = v
+	activity.LastSeen = time.Unix(message.Date, 0)
+	activity.Count += 1
+	chat[message.From.ID] = activity
+	activities[message.Chat.ID] = chat
 }
 
 // GetInactives returns the list of users without activity for the indicated
 // time delta.
-func GetInactives(days int) []UserActivity {
-	limit := time.Now().AddDate(0, 0, -days)
+func GetInactives(days int, chatID int64) []UserActivity {
 	inactives := []UserActivity{}
-	for _, activity := range activities {
+	chat, exists := activities[chatID]
+	if !exists {
+		return inactives
+	}
+
+	limit := time.Now().AddDate(0, 0, -days)
+	for _, activity := range chat {
 		if activity.LastSeen.Before(limit) {
 			inactives = append(inactives, activity)
 		}
@@ -61,7 +72,7 @@ func FormatInactivesMessage(title string, inactives []UserActivity) string {
 
 // KickInactives removes the inactive users
 func KickInactives(days int, bot *telego.Bot, update telego.Update) ([]UserActivity, error) {
-	inactives := GetInactives(days)
+	inactives := GetInactives(days, update.Message.Chat.ID)
 	for _, inactive := range inactives {
 		unbanParams := telego.UnbanChatMemberParams{
 			ChatID: tu.ID(update.Message.Chat.ID),
@@ -76,12 +87,13 @@ func KickInactives(days int, bot *telego.Bot, update telego.Update) ([]UserActiv
 }
 
 // GetStatistics returns the amount of messages sent by user and last seen time.
-func GetStatistics() string {
-	if len(activities) == 0 {
+func GetStatistics(chatID int64) string {
+	chat, exists := activities[chatID]
+	if !exists {
 		return "I don't have statistics yet 🤷"
 	}
 	text := "📈 User statistics:\n"
-	for _, activity := range activities {
+	for _, activity := range chat {
 		lastSeen := activity.LastSeen.Format("2006-01-02 15:04")
 		text += fmt.Sprintf("* @%s: messages: %d, last seen on: %s\n", activity.Username, activity.Count, lastSeen)
 	}

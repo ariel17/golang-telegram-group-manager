@@ -41,7 +41,7 @@ func helpHandler(bot *telego.Bot, update telego.Update) {
 
 func welcomeHandler(bot *telego.Bot, update telego.Update) {
 	_, err := bot.SendMessage(tu.Message(
-		tu.ID(update.Message.Chat.ID), services.GetWelcome(),
+		tu.ID(update.Message.Chat.ID), services.GetWelcome(update.Message.Chat.ID),
 	))
 	if err != nil {
 		panic(err)
@@ -50,7 +50,7 @@ func welcomeHandler(bot *telego.Bot, update telego.Update) {
 
 func setWelcomeHandler(bot *telego.Bot, update telego.Update) {
 	text := removeCommandFromText(update.Message.Text, config.SetWelcome)
-	services.SetWelcome(text)
+	services.SetWelcome(text, update.Message.Chat.ID)
 	_, err := bot.SendMessage(tu.Message(
 		tu.ID(update.Message.Chat.ID), "Welcome message updated 🙌🏽",
 	))
@@ -69,7 +69,7 @@ func inactivesHandler(bot *telego.Bot, update telego.Update) {
 	if err != nil {
 		text = errorToText(err)
 	} else {
-		inactives := services.GetInactives(days)
+		inactives := services.GetInactives(days, update.Message.Chat.ID)
 		text = services.FormatInactivesMessage("😴 Inactive users:\n", inactives)
 	}
 
@@ -122,7 +122,8 @@ func defaultHandler(bot *telego.Bot, update telego.Update) {
 
 func statsHandler(bot *telego.Bot, update telego.Update) {
 	_, err := bot.SendMessage(
-		tu.Message(tu.ID(update.Message.Chat.ID), services.GetStatistics()),
+		tu.Message(tu.ID(update.Message.Chat.ID),
+			services.GetStatistics(update.Message.Chat.ID)),
 	)
 	if err != nil {
 		panic(err)
