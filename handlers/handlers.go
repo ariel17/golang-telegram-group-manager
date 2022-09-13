@@ -152,7 +152,7 @@ func debugHandler(bot *telego.Bot, update telego.Update) {
 }
 
 func errorToText(err error) string {
-	return fmt.Sprintf("Could not complete that 🤔 The problem was: %v", err)
+	return fmt.Sprintf("Can't complete that 🤔 The problem was: %v", err)
 }
 
 func removeCommandFromText(text, command string) string {
