@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/mymmrac/telego"
 	th "github.com/mymmrac/telego/telegohandler"
 
@@ -11,6 +12,8 @@ import (
 )
 
 func main() {
+	defer sentry.Recover()
+
 	bot, err := telego.NewBot(config.GetTelegramApiToken(), telego.WithDefaultDebugLogger())
 	if err != nil {
 		panic(err)

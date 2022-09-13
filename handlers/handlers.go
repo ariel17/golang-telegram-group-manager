@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/mymmrac/telego"
 	th "github.com/mymmrac/telego/telegohandler"
 	tu "github.com/mymmrac/telego/telegoutil"
@@ -35,7 +36,7 @@ func helpHandler(bot *telego.Bot, update telego.Update) {
 		tu.ID(update.Message.Chat.ID), services.GetHelpMessage(),
 	))
 	if err != nil {
-		panic(err)
+		sentry.CaptureException(err)
 	}
 }
 
@@ -44,7 +45,7 @@ func welcomeHandler(bot *telego.Bot, update telego.Update) {
 		tu.ID(update.Message.Chat.ID), services.GetWelcome(update.Message.Chat.ID),
 	))
 	if err != nil {
-		panic(err)
+		sentry.CaptureException(err)
 	}
 }
 
@@ -55,7 +56,7 @@ func setWelcomeHandler(bot *telego.Bot, update telego.Update) {
 		tu.ID(update.Message.Chat.ID), "Welcome message updated 🙌🏽",
 	))
 	if err != nil {
-		panic(err)
+		sentry.CaptureException(err)
 	}
 }
 
@@ -75,7 +76,7 @@ func inactivesHandler(bot *telego.Bot, update telego.Update) {
 
 	_, err = bot.SendMessage(tu.Message(tu.ID(update.Message.Chat.ID), text))
 	if err != nil {
-		panic(err)
+		sentry.CaptureException(err)
 	}
 }
 
@@ -91,6 +92,7 @@ func kickInactivesHandler(bot *telego.Bot, update telego.Update) {
 	} else {
 		inactives, untilDate, err := services.KickInactives(days, bot, update)
 		if err != nil {
+			sentry.CaptureException(err)
 			text = errorToText(err)
 		} else {
 			text = services.FormatInactivesMessage("Users kicked 👋💔:\n", inactives)
@@ -103,7 +105,7 @@ func kickInactivesHandler(bot *telego.Bot, update telego.Update) {
 
 	_, err = bot.SendMessage(tu.Message(tu.ID(update.Message.Chat.ID), text))
 	if err != nil {
-		panic(err)
+		sentry.CaptureException(err)
 	}
 }
 
@@ -119,7 +121,7 @@ func defaultHandler(bot *telego.Bot, update telego.Update) {
 		tu.Message(tu.ID(update.Message.Chat.ID), "I don't know this command 🤷🏽"),
 	)
 	if err != nil {
-		panic(err)
+		sentry.CaptureException(err)
 	}
 }
 
@@ -129,7 +131,7 @@ func statsHandler(bot *telego.Bot, update telego.Update) {
 			services.GetStatistics(update.Message.Chat.ID)),
 	)
 	if err != nil {
-		panic(err)
+		sentry.CaptureException(err)
 	}
 }
 
@@ -137,6 +139,7 @@ func debugHandler(bot *telego.Bot, update telego.Update) {
 	text := removeCommandFromText(update.Message.Text, config.Debug)
 	v, err := services.Debug(text)
 	if err != nil {
+		sentry.CaptureException(err)
 		text = errorToText(err)
 	} else if v == "" {
 		text = "👍🖖"
@@ -147,7 +150,7 @@ func debugHandler(bot *telego.Bot, update telego.Update) {
 		tu.Message(tu.ID(update.Message.Chat.ID), text),
 	)
 	if err != nil {
-		panic(err)
+		sentry.CaptureException(err)
 	}
 }
 

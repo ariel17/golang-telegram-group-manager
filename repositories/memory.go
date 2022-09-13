@@ -1,6 +1,10 @@
 package repositories
 
-import "encoding/json"
+import (
+	"encoding/json"
+
+	"github.com/getsentry/sentry-go"
+)
 
 type chat struct {
 	Welcome    string                 `json:"welcome"`
@@ -69,6 +73,8 @@ func (m memoryRepository) SetWelcomeForChat(chatID int64, text string) {
 }
 
 func (m memoryRepository) Set(value string) error {
+	defer sentry.Recover()
+
 	var temp memoryRepository
 	err := json.Unmarshal([]byte(value), &temp)
 	if err != nil {
