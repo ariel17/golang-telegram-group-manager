@@ -59,7 +59,7 @@ func FormatInactivesMessage(title string, inactives []repositories.UserActivity)
 // date until when they will be able to rejoin.
 func KickInactives(days int, bot *telego.Bot, update telego.Update) ([]repositories.UserActivity, time.Time, error) {
 	inactives := GetInactives(days, update.Message.Chat.ID)
-	untilDate := time.Now().AddDate(0, 1, 0)
+	untilDate := time.Now().AddDate(0, 0, days)
 	for _, inactive := range inactives {
 		banParams := telego.BanChatMemberParams{
 			ChatID:         tu.ID(update.Message.Chat.ID),
