@@ -2,18 +2,22 @@ package repositories
 
 import "encoding/json"
 
-type memoryRepository map[int64]map[string]interface{}
+type chat struct {
+	Welcome    string                 `json:"welcome"`
+	Activities map[int64]UserActivity `json:"activities"`
+}
+
+type memoryRepository map[int64]chat
 
 func (m memoryRepository) GetActivityForUser(chatID, userID int64) (UserActivity, bool) {
-	chat, exists := m[chatID]
+	c, exists := m[chatID]
 	if !exists {
 		return UserActivity{}, false
 	}
-	activities, exists := chat["activities"]
-	if !exists {
+	if c.Activities == nil {
 		return UserActivity{}, false
 	}
-	activity, exists := activities.(map[int64]UserActivity)[userID]
+	activity, exists := c.Activities[userID]
 	if !exists {
 		return UserActivity{}, false
 	}
@@ -21,54 +25,47 @@ func (m memoryRepository) GetActivityForUser(chatID, userID int64) (UserActivity
 }
 
 func (m memoryRepository) SetActivityForUser(chatID, userID int64, activity UserActivity) {
-	chat, exists := m[chatID]
+	c, exists := m[chatID]
 	if !exists {
-		chat = map[string]interface{}{}
+		c = chat{}
 	}
-	activities, exists := chat["activities"]
-	if !exists {
-		activities = map[int64]UserActivity{}
+	if c.Activities == nil {
+		c.Activities = map[int64]UserActivity{}
 	}
-	activities.(map[int64]UserActivity)[userID] = activity
-	chat["activities"] = activities
-	m[chatID] = chat
+	c.Activities[userID] = activity
+	m[chatID] = c
 }
 
 func (m memoryRepository) GetActivities(chatID int64) []UserActivity {
-	chat, exists := m[chatID]
+	c, exists := m[chatID]
 	if !exists {
 		return []UserActivity{}
 	}
-	activities, exists := chat["activities"]
-	if !exists {
+	if c.Activities == nil {
 		return []UserActivity{}
 	}
 	l := []UserActivity{}
-	for _, a := range activities.(map[int64]UserActivity) {
+	for _, a := range c.Activities {
 		l = append(l, a)
 	}
 	return l
 }
 
 func (m memoryRepository) GetWelcomeForChat(chatID int64) (string, bool) {
-	chat, exists := m[chatID]
+	c, exists := m[chatID]
 	if !exists {
 		return "", false
 	}
-	text, exists := chat["welcome"]
-	if !exists {
-		return "", false
-	}
-	return text.(string), true
+	return c.Welcome, c.Welcome != ""
 }
 
 func (m memoryRepository) SetWelcomeForChat(chatID int64, text string) {
-	chat, exists := m[chatID]
+	c, exists := m[chatID]
 	if !exists {
-		chat = map[string]interface{}{}
+		c = chat{}
 	}
-	chat["welcome"] = text
-	m[chatID] = chat
+	c.Welcome = text
+	m[chatID] = c
 }
 
 func (m memoryRepository) Set(value string) error {

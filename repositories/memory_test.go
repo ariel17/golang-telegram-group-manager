@@ -21,8 +21,8 @@ func TestMemoryRepository_GetActivityForUser(t *testing.T) {
 		Count:    1,
 	}
 	r := memoryRepository{}
-	r[chatID] = map[string]interface{}{
-		"activities": map[int64]UserActivity{
+	r[chatID] = chat{
+		Activities: map[int64]UserActivity{
 			userID1: activity,
 		},
 	}
@@ -61,8 +61,8 @@ func TestMemoryRepository_SetActivityForUser(t *testing.T) {
 			Count:    2,
 		}
 		r := memoryRepository{}
-		r[chatID] = map[string]interface{}{
-			"activities": map[int64]UserActivity{
+		r[chatID] = chat{
+			Activities: map[int64]UserActivity{
 				userID1: activity1,
 			},
 		}
@@ -81,8 +81,8 @@ func TestMemoryRepository_SetActivityForUser(t *testing.T) {
 			Count:    1,
 		}
 		r := memoryRepository{}
-		r[chatID] = map[string]interface{}{
-			"activities": map[int64]UserActivity{},
+		r[chatID] = chat{
+			Activities: map[int64]UserActivity{},
 		}
 
 		r.SetActivityForUser(chatID, userID1, activity)
@@ -123,8 +123,8 @@ func TestMemoryRepository_GetActivities(t *testing.T) {
 			Count:    2,
 		}
 		r := memoryRepository{}
-		r[chatID] = map[string]interface{}{
-			"activities": map[int64]UserActivity{
+		r[chatID] = chat{
+			Activities: map[int64]UserActivity{
 				userID1: activity1,
 				userID2: activity2,
 			},
@@ -137,7 +137,7 @@ func TestMemoryRepository_GetActivities(t *testing.T) {
 
 	t.Run("chat exists and has no activities", func(t *testing.T) {
 		r := memoryRepository{}
-		r[chatID] = map[string]interface{}{}
+		r[chatID] = chat{}
 
 		activities := r.GetActivities(chatID)
 		assert.Equal(t, 0, len(activities))
@@ -156,8 +156,8 @@ func TestMemoryRepository_GetWelcomeForChat(t *testing.T) {
 	t.Run("chat exists and has welcome message", func(t *testing.T) {
 		r := memoryRepository{}
 		text := "Hello there"
-		r[chatID] = map[string]interface{}{
-			"welcome": text,
+		r[chatID] = chat{
+			Welcome: text,
 		}
 
 		v, found := r.GetWelcomeForChat(chatID)
@@ -167,7 +167,7 @@ func TestMemoryRepository_GetWelcomeForChat(t *testing.T) {
 
 	t.Run("chat exists and has no welcome message", func(t *testing.T) {
 		r := memoryRepository{}
-		r[chatID] = map[string]interface{}{}
+		r[chatID] = chat{}
 
 		v, found := r.GetWelcomeForChat(chatID)
 		assert.False(t, found)
@@ -189,8 +189,8 @@ func TestMemoryRepository_SetWelcomeForChat(t *testing.T) {
 	t.Run("chat exists and has welcome message", func(t *testing.T) {
 		r := memoryRepository{}
 		text2 := "Bye bye"
-		r[chatID] = map[string]interface{}{
-			"welcome": text,
+		r[chatID] = chat{
+			Welcome: text,
 		}
 
 		r.SetWelcomeForChat(chatID, text2)
@@ -201,7 +201,7 @@ func TestMemoryRepository_SetWelcomeForChat(t *testing.T) {
 
 	t.Run("chat exists and has no welcome message", func(t *testing.T) {
 		r := memoryRepository{}
-		r[chatID] = map[string]interface{}{}
+		r[chatID] = chat{}
 
 		r.SetWelcomeForChat(chatID, text)
 		v, found := r.GetWelcomeForChat(chatID)
@@ -221,8 +221,8 @@ func TestMemoryRepository_SetWelcomeForChat(t *testing.T) {
 
 func TestMemoryRepository_Set(t *testing.T) {
 	r := memoryRepository{}
-	r[chatID] = map[string]interface{}{
-		"activities": map[int64]UserActivity{
+	r[chatID] = chat{
+		Activities: map[int64]UserActivity{
 			userID1: {
 				ID:       userID1,
 				Username: "username",
@@ -230,7 +230,7 @@ func TestMemoryRepository_Set(t *testing.T) {
 				Count:    1,
 			},
 		},
-		"welcome": "Hello there",
+		Welcome: "Hello there",
 	}
 
 	v := `{}`
@@ -241,8 +241,8 @@ func TestMemoryRepository_Set(t *testing.T) {
 
 func TestMemoryRepository_Dump(t *testing.T) {
 	r := memoryRepository{}
-	r[chatID] = map[string]interface{}{
-		"activities": map[int64]UserActivity{
+	r[chatID] = chat{
+		Activities: map[int64]UserActivity{
 			userID1: {
 				ID:       userID1,
 				Username: "username",
@@ -250,9 +250,9 @@ func TestMemoryRepository_Dump(t *testing.T) {
 				Count:    1,
 			},
 		},
-		"welcome": "Hello there",
+		Welcome: "Hello there",
 	}
 
-	v := `{"1":{"activities":{"1":{"id":1,"username":"username","last_seen":"2000-01-01T17:00:00Z","count":1}},"welcome":"Hello there"}}`
+	v := `{"1":{"welcome":"Hello there","activities":{"1":{"id":1,"username":"username","last_seen":"2000-01-01T17:00:00Z","count":1}}}}`
 	assert.Equal(t, v, r.Dump())
 }
