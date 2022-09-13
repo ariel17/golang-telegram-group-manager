@@ -36,6 +36,6 @@ func init() {
 		KickInactives: kickInactivesDescription,
 		Welcome:       "Shows the welcome message.",
 		SetWelcome:    setWelcomeDescription,
-		Stats:         "Show user stats",
+		Stats:         "Shows user stats",
 	}
 }
