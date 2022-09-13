@@ -156,5 +156,6 @@ func errorToText(err error) string {
 }
 
 func removeCommandFromText(text, command string) string {
-	return strings.ReplaceAll(text, fmt.Sprintf("/%s ", command), "")
+	v := strings.ReplaceAll(text, fmt.Sprintf("/%s ", command), "")
+	return strings.ReplaceAll(v, fmt.Sprintf("/%s", command), "")
 }
