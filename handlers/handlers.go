@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 
@@ -113,6 +114,7 @@ func activityHandler(_ *telego.Bot, update telego.Update) {
 	if update.Message.From.IsBot {
 		return
 	}
+	log.Printf("Cannot identify command, assuming activity. Text: %s", update.Message.Text)
 	services.SetActivityForUser(*update.Message)
 }
 
