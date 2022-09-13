@@ -12,14 +12,15 @@ const (
 	Welcome         = "welcome"
 	SetWelcome      = "setwelcome"
 	Stats           = "stats"
+	Debug           = "debug"
 	helpDescription = "Shows command usage."
 )
 
 var (
-	descriptions  map[string]string
-	inactives     = fmt.Sprintf("Returns the list of inactive users in days period. Usage: /%s <days>", Inactives)
-	kickInactives = fmt.Sprintf("Removes all inactive users from group in a time period. Usage: /%s <days>", KickInactives)
-	setWelcome    = fmt.Sprintf("Saves a new welcome message. Usage: /%s <text>", SetWelcome)
+	descriptions             map[string]string
+	inactivesDescription     = fmt.Sprintf("Returns the list of inactive users in days period. Usage: /%s <days>", Inactives)
+	kickInactivesDescription = fmt.Sprintf("Removes all inactive users from group in a time period. Usage: /%s <days>", KickInactives)
+	setWelcomeDescription    = fmt.Sprintf("Saves a new welcome message. Usage: /%s <text>", SetWelcome)
 )
 
 // GetDescriptions returns a map of descriptions on existing commands.
@@ -31,10 +32,10 @@ func init() {
 	descriptions = map[string]string{
 		Start:         helpDescription,
 		Help:          helpDescription,
-		Inactives:     inactives,
-		KickInactives: kickInactives,
+		Inactives:     inactivesDescription,
+		KickInactives: kickInactivesDescription,
 		Welcome:       "Shows the welcome message.",
-		SetWelcome:    setWelcome,
+		SetWelcome:    setWelcomeDescription,
 		Stats:         "Show user stats",
 	}
 }

@@ -34,20 +34,20 @@ func (m memoryRepository) SetActivityForUser(chatID, userID int64, activity User
 	m[chatID] = chat
 }
 
-func (m memoryRepository) GetActivities(chatID int64) ([]UserActivity, bool) {
+func (m memoryRepository) GetActivities(chatID int64) []UserActivity {
 	chat, exists := m[chatID]
 	if !exists {
-		return []UserActivity{}, false
+		return []UserActivity{}
 	}
 	activities, exists := chat["activities"]
 	if !exists {
-		return []UserActivity{}, false
+		return []UserActivity{}
 	}
 	l := []UserActivity{}
 	for _, a := range activities.(map[int64]UserActivity) {
 		l = append(l, a)
 	}
-	return l, true
+	return l
 }
 
 func (m memoryRepository) GetWelcomeForChat(chatID int64) (string, bool) {
@@ -68,6 +68,7 @@ func (m memoryRepository) SetWelcomeForChat(chatID int64, text string) {
 		chat = map[string]interface{}{}
 	}
 	chat["welcome"] = text
+	m[chatID] = chat
 }
 
 func (m memoryRepository) Set(value string) error {
@@ -91,8 +92,4 @@ func (m memoryRepository) Set(value string) error {
 func (m memoryRepository) Dump() string {
 	b, _ := json.Marshal(m)
 	return string(b)
-}
-
-func newMemoryRepository() Repository {
-	return make(memoryRepository)
 }

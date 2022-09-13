@@ -130,8 +130,7 @@ func TestMemoryRepository_GetActivities(t *testing.T) {
 			},
 		}
 
-		activities, found := r.GetActivities(chatID)
-		assert.True(t, found)
+		activities := r.GetActivities(chatID)
 		assert.Equal(t, 2, len(activities))
 		assert.Equal(t, []UserActivity{activity1, activity2}, activities)
 	})
@@ -140,16 +139,14 @@ func TestMemoryRepository_GetActivities(t *testing.T) {
 		r := memoryRepository{}
 		r[chatID] = map[string]interface{}{}
 
-		activities, found := r.GetActivities(chatID)
-		assert.False(t, found)
+		activities := r.GetActivities(chatID)
 		assert.Equal(t, 0, len(activities))
 	})
 
 	t.Run("chat does not exist", func(t *testing.T) {
 		r := memoryRepository{}
 
-		activities, found := r.GetActivities(chatID)
-		assert.False(t, found)
+		activities := r.GetActivities(chatID)
 		assert.Equal(t, 0, len(activities))
 	})
 }

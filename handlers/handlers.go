@@ -22,7 +22,7 @@ func ConfigureHandlers(bh *th.BotHandler) {
 	bh.Handle(inactivesHandler, th.CommandEqual(config.Inactives))
 	bh.Handle(kickInactivesHandler, th.CommandEqual(config.KickInactives))
 	bh.Handle(statsHandler, th.CommandEqual(config.Stats))
-
+	bh.Handle(debugHandler, th.CommandEqual(config.Debug))
 	bh.Handle(defaultHandler, th.AnyCommand())
 	bh.Handle(activityHandler, th.AnyMessage())
 
@@ -89,12 +89,15 @@ func kickInactivesHandler(bot *telego.Bot, update telego.Update) {
 	if err != nil {
 		text = errorToText(err)
 	} else {
-		inactives, err := services.KickInactives(days, bot, update)
+		inactives, untilDate, err := services.KickInactives(days, bot, update)
 		if err != nil {
 			text = errorToText(err)
 		} else {
-			text = services.FormatInactivesMessage("👋💔 Kicked users:\n", inactives)
-
+			text = services.FormatInactivesMessage("Users kicked 👋💔:\n", inactives)
+			text += fmt.Sprintf(
+				"\nThey are unable to re-join the group until %s\n🤷 Sorry-not sorry\n",
+				untilDate.Format("2006-01-02 15:04"),
+			)
 		}
 	}
 
@@ -124,6 +127,24 @@ func statsHandler(bot *telego.Bot, update telego.Update) {
 	_, err := bot.SendMessage(
 		tu.Message(tu.ID(update.Message.Chat.ID),
 			services.GetStatistics(update.Message.Chat.ID)),
+	)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func debugHandler(bot *telego.Bot, update telego.Update) {
+	text := removeCommandFromText(update.Message.Text, config.Debug)
+	v, err := services.Debug(text)
+	if err != nil {
+		text = errorToText(err)
+	} else if v == "" {
+		text = "👍🖖"
+	} else {
+		text = v
+	}
+	_, err = bot.SendMessage(
+		tu.Message(tu.ID(update.Message.Chat.ID), text),
 	)
 	if err != nil {
 		panic(err)

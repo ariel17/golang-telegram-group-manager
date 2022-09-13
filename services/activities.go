@@ -7,50 +7,35 @@ import (
 
 	"github.com/mymmrac/telego"
 	tu "github.com/mymmrac/telego/telegoutil"
+
+	"github.com/ariel17/golang-telegram-group-manager/repositories"
 )
 
-type UserActivity struct {
-	ID       int64     `json:"id"`
-	Username string    `json:"username"`
-	LastSeen time.Time `json:"last_seen"`
-	Count    int64     `json:"count"`
-}
-
 var (
-	activities = map[int64]map[int64]UserActivity{}
+	repository repositories.Repository
 )
 
 // SetActivityForUser saves the last sent message
 func SetActivityForUser(message telego.Message) {
-	chat, exists := activities[message.Chat.ID]
+	activity, exists := repository.GetActivityForUser(message.Chat.ID, message.From.ID)
 	if !exists {
-		chat = map[int64]UserActivity{}
-	}
-
-	activity, exists := chat[message.From.ID]
-	if !exists {
-		activity = UserActivity{
+		activity = repositories.UserActivity{
 			ID:       message.From.ID,
 			Username: determineUsername(*message.From),
 		}
 	}
 	activity.LastSeen = time.Unix(message.Date, 0)
 	activity.Count += 1
-	chat[message.From.ID] = activity
-	activities[message.Chat.ID] = chat
+	repository.SetActivityForUser(message.Chat.ID, message.From.ID, activity)
 }
 
 // GetInactives returns the list of users without activity for the indicated
 // time delta.
-func GetInactives(days int, chatID int64) []UserActivity {
-	inactives := []UserActivity{}
-	chat, exists := activities[chatID]
-	if !exists {
-		return inactives
-	}
-
+func GetInactives(days int, chatID int64) []repositories.UserActivity {
+	activities := repository.GetActivities(chatID)
 	limit := time.Now().AddDate(0, 0, -days)
-	for _, activity := range chat {
+	inactives := []repositories.UserActivity{}
+	for _, activity := range activities {
 		if activity.LastSeen.Before(limit) {
 			inactives = append(inactives, activity)
 		}
@@ -58,7 +43,7 @@ func GetInactives(days int, chatID int64) []UserActivity {
 	return inactives
 }
 
-func FormatInactivesMessage(title string, inactives []UserActivity) string {
+func FormatInactivesMessage(title string, inactives []repositories.UserActivity) string {
 	if len(inactives) == 0 {
 		return "No inactive users 🙌🏽"
 	}
@@ -70,30 +55,34 @@ func FormatInactivesMessage(title string, inactives []UserActivity) string {
 	return text
 }
 
-// KickInactives removes the inactive users
-func KickInactives(days int, bot *telego.Bot, update telego.Update) ([]UserActivity, error) {
+// KickInactives removes the inactive users and returns the list of them and the
+// date until when they will be able to rejoin.
+func KickInactives(days int, bot *telego.Bot, update telego.Update) ([]repositories.UserActivity, time.Time, error) {
 	inactives := GetInactives(days, update.Message.Chat.ID)
+	untilDate := time.Now().AddDate(0, 1, 0)
 	for _, inactive := range inactives {
-		unbanParams := telego.UnbanChatMemberParams{
-			ChatID: tu.ID(update.Message.Chat.ID),
-			UserID: inactive.ID,
+		banParams := telego.BanChatMemberParams{
+			ChatID:         tu.ID(update.Message.Chat.ID),
+			UserID:         inactive.ID,
+			UntilDate:      untilDate.Unix(),
+			RevokeMessages: false,
 		}
-		err := bot.UnbanChatMember(&unbanParams)
+		err := bot.BanChatMember(&banParams)
 		if err != nil {
-			return nil, err
+			return nil, time.Time{}, err
 		}
 	}
-	return inactives, nil
+	return inactives, untilDate, nil
 }
 
 // GetStatistics returns the amount of messages sent by user and last seen time.
 func GetStatistics(chatID int64) string {
-	chat, exists := activities[chatID]
-	if !exists {
+	activities := repository.GetActivities(chatID)
+	if len(activities) == 0 {
 		return "I don't have statistics yet 🤷"
 	}
 	text := "📈 User statistics:\n"
-	for _, activity := range chat {
+	for _, activity := range activities {
 		lastSeen := activity.LastSeen.Format("2006-01-02 15:04")
 		text += fmt.Sprintf("* @%s: messages: %d, last seen on: %s\n", activity.Username, activity.Count, lastSeen)
 	}
@@ -106,4 +95,8 @@ func determineUsername(user telego.User) string {
 	}
 	v := fmt.Sprintf("%s %s", user.FirstName, user.LastName)
 	return strings.TrimSpace(v)
+}
+
+func init() {
+	repository = repositories.New()
 }

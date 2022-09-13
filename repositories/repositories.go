@@ -13,9 +13,14 @@ type UserActivity struct {
 type Repository interface {
 	GetActivityForUser(chatID, userID int64) (UserActivity, bool)
 	SetActivityForUser(chatID, userID int64, activity UserActivity)
-	GetActivities(chatID int64) ([]UserActivity, bool)
+	GetActivities(chatID int64) []UserActivity
 	GetWelcomeForChat(chatID int64) (string, bool)
 	SetWelcomeForChat(chatID int64, text string)
 	Set(value string) error
 	Dump() string
+}
+
+// New returns a new instance of implementation.
+func New() Repository {
+	return make(memoryRepository)
 }

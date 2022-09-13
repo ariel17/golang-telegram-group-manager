@@ -5,23 +5,22 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/ariel17/golang-telegram-group-manager/repositories"
 )
 
 func TestGetInactives(t *testing.T) {
-	activities = map[int64]map[int64]UserActivity{
-		1: {
-			1: {
-				ID:       1,
-				Username: "user1",
-				LastSeen: time.Now().AddDate(0, 0, -45),
-			},
-			2: {
-				ID:       2,
-				Username: "user2",
-				LastSeen: time.Now().AddDate(0, 0, -25),
-			},
-		},
-	}
-	inactives := GetInactives(30, 1)
+	var chatID int64 = 1
+	repository.SetActivityForUser(chatID, 1, repositories.UserActivity{
+		ID:       1,
+		Username: "user1",
+		LastSeen: time.Now().AddDate(0, 0, -45),
+	})
+	repository.SetActivityForUser(chatID, 2, repositories.UserActivity{
+		ID:       2,
+		Username: "user2",
+		LastSeen: time.Now().AddDate(0, 0, -25),
+	})
+	inactives := GetInactives(30, chatID)
 	assert.Equal(t, 1, len(inactives))
 }
