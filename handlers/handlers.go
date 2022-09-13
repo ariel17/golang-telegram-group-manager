@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 
@@ -110,11 +109,16 @@ func kickInactivesHandler(bot *telego.Bot, update telego.Update) {
 	}
 }
 
-func activityHandler(_ *telego.Bot, update telego.Update) {
+func activityHandler(bot *telego.Bot, update telego.Update) {
 	if update.Message.From.IsBot {
 		return
 	}
-	log.Printf("Cannot identify command, assuming activity. Text: %s", update.Message.Text)
+	// TODO this is a workaround until I figure out what happens here and why it
+	//  is not detected as command for multiline messages
+	if strings.HasPrefix(update.Message.Text, fmt.Sprintf("/%s", config.SetWelcome)) {
+		setWelcomeHandler(bot, update)
+		return
+	}
 	services.SetActivityForUser(*update.Message)
 }
 
