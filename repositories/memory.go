@@ -9,9 +9,10 @@ import (
 )
 
 type chat struct {
-	Welcome    string                 `json:"welcome"`
-	Activities map[int64]UserActivity `json:"activities"`
-	Lang       string                 `json:"lang,omitempty"`
+	Welcome       string                     `json:"welcome"`
+	Activities    map[int64]UserActivity     `json:"activities"`
+	Lang          string                     `json:"lang,omitempty"`
+	Presentations map[int64]UserPresentation `json:"presentations,omitempty"`
 }
 
 type memoryRepository map[int64]chat
@@ -118,4 +119,31 @@ func (m memoryRepository) GetLangForChat(chatID int64) string {
 		return config.ENGLISH_LANG
 	}
 	return c.Lang
+}
+
+func (m memoryRepository) GetPresentationForUser(chatID, userID int64) (UserPresentation, bool) {
+	c, exists := m[chatID]
+	if !exists {
+		return UserPresentation{}, false
+	}
+	if c.Presentations == nil {
+		return UserPresentation{}, false
+	}
+	presentation, exists := c.Presentations[userID]
+	if !exists {
+		return UserPresentation{}, false
+	}
+	return presentation, true
+}
+
+func (m memoryRepository) SetPresentationForUser(chatID, userID int64, presentation UserPresentation) {
+	c, exists := m[chatID]
+	if !exists {
+		c = chat{}
+	}
+	if c.Presentations == nil {
+		c.Presentations = map[int64]UserPresentation{}
+	}
+	c.Presentations[userID] = presentation
+	m[chatID] = c
 }

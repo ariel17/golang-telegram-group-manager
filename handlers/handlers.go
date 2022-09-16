@@ -25,6 +25,8 @@ func ConfigureHandlers(bh *th.BotHandler) {
 	bh.Handle(statsHandler, th.CommandEqual(config.Stats))
 	bh.Handle(debugHandler, th.CommandEqual(config.Debug))
 	bh.Handle(setLangHandler, th.CommandEqual(config.SetLang))
+	bh.Handle(meHandler, th.CommandEqual(config.Me))
+	bh.Handle(setMeHandler, th.CommandEqual(config.SetMe))
 	bh.Handle(defaultHandler, th.AnyCommand())
 	bh.Handle(activityHandler, th.AnyMessage())
 
@@ -116,6 +118,10 @@ func activityHandler(bot *telego.Bot, update telego.Update) {
 		setWelcomeHandler(bot, update)
 		return
 	}
+	if strings.HasPrefix(update.Message.Caption, fmt.Sprintf("/%s", config.SetMe)) {
+		setMeHandler(bot, update)
+		return
+	}
 	services.SetActivityForUser(*update.Message)
 }
 
@@ -161,6 +167,42 @@ func setLangHandler(bot *telego.Bot, update telego.Update) {
 	text := removeCommandFromText(update.Message.Text, config.SetLang)
 	text = services.SetLanguage(update.Message.Chat.ID, text)
 	_, err := bot.SendMessage(
+		tu.Message(tu.ID(update.Message.Chat.ID), text),
+	)
+	if err != nil {
+		sentry.CaptureException(err)
+	}
+}
+
+func meHandler(bot *telego.Bot, update telego.Update) {
+	var err error
+	text, photoID, found := services.GetPresentation(update.Message.Chat.ID, update.Message.From.ID)
+	if !found {
+		_, err = bot.SendMessage(
+			tu.Message(tu.ID(update.Message.Chat.ID), text),
+		)
+	} else {
+		p := telego.SendPhotoParams{
+			ChatID: tu.ID(update.Message.Chat.ID),
+			Photo: telego.InputFile{
+				FileID: photoID,
+			},
+			Caption: text,
+		}
+		_, err = bot.SendPhoto(&p)
+	}
+	if err != nil {
+		sentry.CaptureException(err)
+	}
+}
+
+func setMeHandler(bot *telego.Bot, update telego.Update) {
+	var (
+		text = removeCommandFromText(update.Message.Caption, config.SetMe)
+		err  error
+	)
+	text = services.SetPresentation(update.Message.Chat.ID, update.Message.From.ID, text, update.Message.Photo)
+	_, err = bot.SendMessage(
 		tu.Message(tu.ID(update.Message.Chat.ID), text),
 	)
 	if err != nil {

@@ -21,6 +21,8 @@ var (
 			SetWelcome:    fmt.Sprintf("Saves a new welcome message. Usage: /%s <text>", SetWelcome),
 			Stats:         "Shows user stats",
 			SetLang:       fmt.Sprintf("Sets the language. Usage: /%s <lang> (en: english, es: spanish)", SetLang),
+			Me:            "Gets the user presentation.",
+			SetMe:         fmt.Sprintf("Sets the user presentation. Usage: /%s <text> adding a photo", SetMe),
 		},
 		SPANISH_LANG: {
 			Start:         esHelpDescription,
@@ -31,6 +33,8 @@ var (
 			SetWelcome:    fmt.Sprintf("Guarda un nuevo mensaje de bienvenida. Uso: /%s <texto>", SetWelcome),
 			Stats:         "Muestra las estadísticas de los usuarios.",
 			SetLang:       fmt.Sprintf("Configura el lenguage. Uso: /%s <idioma> (en: inglés, es: español)", SetLang),
+			Me:            "Muestra la presentación del usuario.",
+			SetMe:         fmt.Sprintf("Guarda la presentación del usuario. Uso: /%s <texto> agregando una foto", SetMe),
 		},
 	}
 	availableCommands = map[string]string{
@@ -84,6 +88,18 @@ var (
 	errorText = map[string]string{
 		ENGLISH_LANG: "Can't complete that 🤔 The problem was: %v",
 		SPANISH_LANG: "No puedo completar eso 🤔 El problema fue: %v",
+	}
+	noPresentation = map[string]string{
+		ENGLISH_LANG: fmt.Sprintf("You don't have a presentation yet 🤷 Set one with /%s <text> and adding a photo", SetMe),
+		SPANISH_LANG: fmt.Sprintf("No tenés una presentación aún 🤷 Configurá una con /%s <texto> y agregando una foto", SetMe),
+	}
+	presentationChanged = map[string]string{
+		ENGLISH_LANG: "Presentation updated 🙌🏽",
+		SPANISH_LANG: "Presentación actualizada 🙌🏽",
+	}
+	missingPhoto = map[string]string{
+		ENGLISH_LANG: "You have to add a photo to your presentation! 😤",
+		SPANISH_LANG: "Tenés que agregar una foto a tu presentación! 😤",
 	}
 )
 
@@ -142,4 +158,16 @@ func GetStatisticsRowText(lang string) string {
 
 func GetErrorText(lang string) string {
 	return errorText[lang]
+}
+
+func GetNoPresentationText(lang string) string {
+	return noPresentation[lang]
+}
+
+func GetPresentationChangedText(lang string) string {
+	return presentationChanged[lang]
+}
+
+func GetMissingPhotoText(lang string) string {
+	return missingPhoto[lang]
 }

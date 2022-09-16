@@ -10,6 +10,11 @@ type UserActivity struct {
 	Count    int64     `json:"count"`
 }
 
+type UserPresentation struct {
+	Text    string `json:"text"`
+	PhotoID string `json:"photo_id"`
+}
+
 type Repository interface {
 	GetActivityForUser(chatID, userID int64) (UserActivity, bool)
 	SetActivityForUser(chatID, userID int64, activity UserActivity)
@@ -20,6 +25,8 @@ type Repository interface {
 	Dump() string
 	SetLangForChat(chatID int64, lang string)
 	GetLangForChat(chatID int64) string
+	SetPresentationForUser(chatID, userID int64, presentation UserPresentation)
+	GetPresentationForUser(chatID, userID int64) (UserPresentation, bool)
 }
 
 // New returns a new instance of implementation.

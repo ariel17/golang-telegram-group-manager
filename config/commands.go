@@ -10,4 +10,6 @@ const (
 	SetLang       = "setlang"
 	Stats         = "stats"
 	Debug         = "debug"
+	Me            = "me"
+	SetMe         = "setme"
 )
