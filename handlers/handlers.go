@@ -122,7 +122,6 @@ func activityHandler(bot *telego.Bot, update telego.Update) {
 		setMeHandler(bot, update)
 		return
 	}
-	// New ingress
 	if update.Message.NewChatMembers != nil {
 		welcomeHandler(bot, update)
 		return

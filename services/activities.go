@@ -80,6 +80,7 @@ func KickInactives(days int, bot *telego.Bot, update telego.Update) ([]repositor
 		if err != nil {
 			return nil, time.Time{}, err
 		}
+		RemoveUser(update.Message.Chat.ID, inactive.ID)
 	}
 	return inactives, untilDate, nil
 }
