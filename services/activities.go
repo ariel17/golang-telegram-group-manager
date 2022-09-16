@@ -119,6 +119,10 @@ func formatInactives(lang, title string, inactives []repositories.UserActivity) 
 	return text, true
 }
 
+func RemoveUser(chatID, userID int64) {
+
+}
+
 func init() {
 	repository = repositories.New()
 	if config.DebugJSON != "" {

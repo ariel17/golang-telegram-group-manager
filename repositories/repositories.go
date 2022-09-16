@@ -27,6 +27,7 @@ type Repository interface {
 	GetLangForChat(chatID int64) string
 	SetPresentationForUser(chatID, userID int64, presentation UserPresentation)
 	GetPresentationForUser(chatID, userID int64) (UserPresentation, bool)
+	RemoveUserData(chatID, userID int64)
 }
 
 // New returns a new instance of implementation.

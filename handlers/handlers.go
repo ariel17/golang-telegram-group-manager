@@ -122,12 +122,21 @@ func activityHandler(bot *telego.Bot, update telego.Update) {
 		setMeHandler(bot, update)
 		return
 	}
+	// New ingress
+	if update.Message.NewChatMembers != nil {
+		welcomeHandler(bot, update)
+		return
+	}
+	if update.Message.LeftChatMember != nil {
+		services.RemoveUser(update.Message.Chat.ID, update.Message.LeftChatMember.ID)
+		return
+	}
 	services.SetActivityForUser(*update.Message)
 }
 
 func defaultHandler(bot *telego.Bot, update telego.Update) {
 	_, err := bot.SendMessage(
-		tu.Message(tu.ID(update.Message.Chat.ID), "I don't know this command 🤷🏽"),
+		tu.Message(tu.ID(update.Message.Chat.ID), services.UnknownCommand(update.Message.Chat.ID)),
 	)
 	if err != nil {
 		sentry.CaptureException(err)

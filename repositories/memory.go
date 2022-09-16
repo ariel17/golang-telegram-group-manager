@@ -147,3 +147,17 @@ func (m memoryRepository) SetPresentationForUser(chatID, userID int64, presentat
 	c.Presentations[userID] = presentation
 	m[chatID] = c
 }
+
+func (m memoryRepository) RemoveUserData(chatID, userID int64) {
+	c, exists := m[chatID]
+	if !exists {
+		return
+	}
+	if c.Activities != nil {
+		delete(c.Activities, userID)
+	}
+	if c.Presentations != nil {
+		delete(c.Presentations, userID)
+	}
+	m[chatID] = c
+}

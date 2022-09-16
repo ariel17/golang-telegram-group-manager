@@ -101,6 +101,10 @@ var (
 		ENGLISH_LANG: "You have to add a photo to your presentation! 😤",
 		SPANISH_LANG: "Tenés que agregar una foto a tu presentación! 😤",
 	}
+	unknownCommand = map[string]string{
+		ENGLISH_LANG: "I don't know this command 🤷🏽",
+		SPANISH_LANG: "No entiendo este comando 🤷🏽",
+	}
 )
 
 // GetDescriptions returns a map of descriptions on existing commands.
@@ -170,4 +174,8 @@ func GetPresentationChangedText(lang string) string {
 
 func GetMissingPhotoText(lang string) string {
 	return missingPhoto[lang]
+}
+
+func GetUnknownCommandText(lang string) string {
+	return unknownCommand[lang]
 }
