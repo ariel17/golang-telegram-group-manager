@@ -4,7 +4,10 @@ import (
 	"os"
 )
 
-var telegramApiToken string
+var (
+	telegramApiToken string
+	DebugJSON        string
+)
 
 // GetTelegramApiToken returns the configured value of Telegram API token.
 func GetTelegramApiToken() string {
@@ -13,4 +16,5 @@ func GetTelegramApiToken() string {
 
 func init() {
 	telegramApiToken = os.Getenv("TELEGRAM_API_TOKEN")
+	DebugJSON = os.Getenv("DEBUG_JSON")
 }

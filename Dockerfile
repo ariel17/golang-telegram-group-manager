@@ -13,5 +13,6 @@ COPY --from=build /build/bot .
 
 ENV TELEGRAM_API_TOKEN token
 ENV SENTRY_DSN dsn
+ENV DEBUG_JSON json
 
 CMD ["./bot"]

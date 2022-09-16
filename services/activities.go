@@ -2,9 +2,11 @@ package services
 
 import (
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/mymmrac/telego"
 	tu "github.com/mymmrac/telego/telegoutil"
 
@@ -119,4 +121,13 @@ func formatInactives(lang, title string, inactives []repositories.UserActivity) 
 
 func init() {
 	repository = repositories.New()
+	if config.DebugJSON != "" {
+		if err := repository.Set(config.DebugJSON); err != nil {
+			log.Printf("Failed loading debug JSON: %v", err)
+			sentry.CaptureException(err)
+		} else {
+			log.Printf("Succesful loading of debug JSON")
+		}
+		config.DebugJSON = ""
+	}
 }

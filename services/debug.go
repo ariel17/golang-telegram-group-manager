@@ -1,6 +1,8 @@
 package services
 
-import "log"
+import (
+	"log"
+)
 
 // Debug sets/exposes internal data structure.
 func Debug(text string) (string, error) {
