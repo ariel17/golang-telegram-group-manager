@@ -7,9 +7,10 @@ import (
 )
 
 // GetHelpMessage shows the help text with commands usage.
-func GetHelpMessage() string {
-	text := "🕹 Available commands:\n"
-	for k, v := range config.GetDescriptions() {
+func GetHelpMessage(chatID int64) string {
+	lang := repository.GetLangForChat(chatID)
+	text := config.GetAvailableCommandsText(lang)
+	for k, v := range config.GetDescriptions(lang) {
 		text += fmt.Sprintf("* /%s: %s\n", k, v)
 	}
 	return text

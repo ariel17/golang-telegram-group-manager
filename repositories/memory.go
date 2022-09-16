@@ -4,11 +4,14 @@ import (
 	"encoding/json"
 
 	"github.com/getsentry/sentry-go"
+
+	"github.com/ariel17/golang-telegram-group-manager/config"
 )
 
 type chat struct {
 	Welcome    string                 `json:"welcome"`
 	Activities map[int64]UserActivity `json:"activities"`
+	Lang       string                 `json:"lang,omitempty"`
 }
 
 type memoryRepository map[int64]chat
@@ -95,4 +98,24 @@ func (m memoryRepository) Set(value string) error {
 func (m memoryRepository) Dump() string {
 	b, _ := json.Marshal(m)
 	return string(b)
+}
+
+func (m memoryRepository) SetLangForChat(chatID int64, lang string) {
+	c, exists := m[chatID]
+	if !exists {
+		c = chat{}
+	}
+	c.Lang = lang
+	m[chatID] = c
+}
+
+func (m memoryRepository) GetLangForChat(chatID int64) string {
+	c, exists := m[chatID]
+	if !exists {
+		return config.ENGLISH_LANG
+	}
+	if c.Lang == "" {
+		return config.ENGLISH_LANG
+	}
+	return c.Lang
 }

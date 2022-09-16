@@ -8,6 +8,7 @@ import (
 	"github.com/mymmrac/telego"
 	tu "github.com/mymmrac/telego/telegoutil"
 
+	"github.com/ariel17/golang-telegram-group-manager/config"
 	"github.com/ariel17/golang-telegram-group-manager/repositories"
 )
 
@@ -43,16 +44,22 @@ func GetInactives(days int, chatID int64) []repositories.UserActivity {
 	return inactives
 }
 
-func FormatInactivesMessage(title string, inactives []repositories.UserActivity) string {
-	if len(inactives) == 0 {
-		return "No inactive users 🙌🏽"
-	}
-	text := title
-	for _, activity := range inactives {
-		lastSeen := activity.LastSeen.Format("2006-01-02 15:04")
-		text += fmt.Sprintf("* @%s: %s\n", activity.Username, lastSeen)
-	}
+func FormatInactivesMessage(chatID int64, inactives []repositories.UserActivity) string {
+	lang := repository.GetLangForChat(chatID)
+	title := config.GetInactivesText(lang)
+	text, _ := formatInactives(lang, title, inactives)
 	return text
+}
+
+func FormatKickedInactivesMessage(chatID int64, inactives []repositories.UserActivity, untilDate time.Time) string {
+	lang := repository.GetLangForChat(chatID)
+	prefix := config.GetKickedPrefix(lang)
+	text, formatted := formatInactives(lang, prefix, inactives)
+	if !formatted {
+		return text
+	}
+	suffix := fmt.Sprintf(config.GetKickedSuffix(lang), untilDate.Format("2006-01-02 15:04"))
+	return text + suffix
 }
 
 // KickInactives removes the inactive users and returns the list of them and the
@@ -77,14 +84,15 @@ func KickInactives(days int, bot *telego.Bot, update telego.Update) ([]repositor
 
 // GetStatistics returns the amount of messages sent by user and last seen time.
 func GetStatistics(chatID int64) string {
+	lang := repository.GetLangForChat(chatID)
 	activities := repository.GetActivities(chatID)
 	if len(activities) == 0 {
-		return "I don't have statistics yet 🤷"
+		return config.GetNoStatisticsText(lang)
 	}
-	text := "📈 User statistics:\n"
+	text := config.GetStatisticsText(lang)
 	for _, activity := range activities {
 		lastSeen := activity.LastSeen.Format("2006-01-02 15:04")
-		text += fmt.Sprintf("* @%s: messages: %d, last seen on: %s\n", activity.Username, activity.Count, lastSeen)
+		text += fmt.Sprintf(config.GetStatisticsRowText(lang), activity.Username, activity.Count, lastSeen)
 	}
 	return text
 }
@@ -95,6 +103,18 @@ func determineUsername(user telego.User) string {
 	}
 	v := fmt.Sprintf("%s %s", user.FirstName, user.LastName)
 	return strings.TrimSpace(v)
+}
+
+func formatInactives(lang, title string, inactives []repositories.UserActivity) (string, bool) {
+	if len(inactives) == 0 {
+		return config.GetNoInactiveText(lang), false
+	}
+	text := title
+	for _, activity := range inactives {
+		lastSeen := activity.LastSeen.Format("2006-01-02 15:04")
+		text += fmt.Sprintf("* @%s: %s\n", activity.Username, lastSeen)
+	}
+	return text, true
 }
 
 func init() {

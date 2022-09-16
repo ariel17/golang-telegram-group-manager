@@ -24,6 +24,7 @@ func ConfigureHandlers(bh *th.BotHandler) {
 	bh.Handle(kickInactivesHandler, th.CommandEqual(config.KickInactives))
 	bh.Handle(statsHandler, th.CommandEqual(config.Stats))
 	bh.Handle(debugHandler, th.CommandEqual(config.Debug))
+	bh.Handle(setLangHandler, th.CommandEqual(config.SetLang))
 	bh.Handle(defaultHandler, th.AnyCommand())
 	bh.Handle(activityHandler, th.AnyMessage())
 
@@ -33,7 +34,7 @@ func ConfigureHandlers(bh *th.BotHandler) {
 
 func helpHandler(bot *telego.Bot, update telego.Update) {
 	_, err := bot.SendMessage(tu.Message(
-		tu.ID(update.Message.Chat.ID), services.GetHelpMessage(),
+		tu.ID(update.Message.Chat.ID), services.GetHelpMessage(update.Message.Chat.ID),
 	))
 	if err != nil {
 		sentry.CaptureException(err)
@@ -51,9 +52,9 @@ func welcomeHandler(bot *telego.Bot, update telego.Update) {
 
 func setWelcomeHandler(bot *telego.Bot, update telego.Update) {
 	text := removeCommandFromText(update.Message.Text, config.SetWelcome)
-	services.SetWelcome(text, update.Message.Chat.ID)
+	text = services.SetWelcome(text, update.Message.Chat.ID)
 	_, err := bot.SendMessage(tu.Message(
-		tu.ID(update.Message.Chat.ID), "Welcome message updated 🙌🏽",
+		tu.ID(update.Message.Chat.ID), text,
 	))
 	if err != nil {
 		sentry.CaptureException(err)
@@ -68,10 +69,10 @@ func inactivesHandler(bot *telego.Bot, update telego.Update) {
 	)
 
 	if err != nil {
-		text = errorToText(err)
+		text = services.ErrorToText(update.Message.Chat.ID, err)
 	} else {
 		inactives := services.GetInactives(days, update.Message.Chat.ID)
-		text = services.FormatInactivesMessage("😴 Inactive users:\n", inactives)
+		text = services.FormatInactivesMessage(update.Message.Chat.ID, inactives)
 	}
 
 	_, err = bot.SendMessage(tu.Message(tu.ID(update.Message.Chat.ID), text))
@@ -88,18 +89,14 @@ func kickInactivesHandler(bot *telego.Bot, update telego.Update) {
 	)
 
 	if err != nil {
-		text = errorToText(err)
+		text = services.ErrorToText(update.Message.Chat.ID, err)
 	} else {
 		inactives, untilDate, err := services.KickInactives(days, bot, update)
 		if err != nil {
 			sentry.CaptureException(err)
-			text = errorToText(err)
+			text = services.ErrorToText(update.Message.Chat.ID, err)
 		} else {
-			text = services.FormatInactivesMessage("Users kicked 👋💔:\n", inactives)
-			text += fmt.Sprintf(
-				"\nThey are unable to re-join the group until %s\n🤷 Sorry-not sorry\n",
-				untilDate.Format("2006-01-02 15:04"),
-			)
+			text = services.FormatKickedInactivesMessage(update.Message.Chat.ID, inactives, untilDate)
 		}
 	}
 
@@ -146,7 +143,7 @@ func debugHandler(bot *telego.Bot, update telego.Update) {
 	v, err := services.Debug(text)
 	if err != nil {
 		sentry.CaptureException(err)
-		text = errorToText(err)
+		text = services.ErrorToText(update.Message.Chat.ID, err)
 	} else if v == "" {
 		text = "👍🖖"
 	} else {
@@ -160,8 +157,15 @@ func debugHandler(bot *telego.Bot, update telego.Update) {
 	}
 }
 
-func errorToText(err error) string {
-	return fmt.Sprintf("Can't complete that 🤔 The problem was: %v", err)
+func setLangHandler(bot *telego.Bot, update telego.Update) {
+	text := removeCommandFromText(update.Message.Text, config.SetLang)
+	text = services.SetLanguage(update.Message.Chat.ID, text)
+	_, err := bot.SendMessage(
+		tu.Message(tu.ID(update.Message.Chat.ID), text),
+	)
+	if err != nil {
+		sentry.CaptureException(err)
+	}
 }
 
 func removeCommandFromText(text, command string) string {

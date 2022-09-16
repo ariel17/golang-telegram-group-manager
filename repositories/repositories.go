@@ -18,6 +18,8 @@ type Repository interface {
 	SetWelcomeForChat(chatID int64, text string)
 	Set(value string) error
 	Dump() string
+	SetLangForChat(chatID int64, lang string)
+	GetLangForChat(chatID int64) string
 }
 
 // New returns a new instance of implementation.
