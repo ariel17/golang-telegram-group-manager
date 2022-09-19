@@ -1,19 +1,3 @@
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 3.63.0"
-    }
-  }
-
-  required_version = "~> 1.0.5"
-}
-
-provider "aws" {
-  profile = "ariel17"
-  region  = "us-east-2"
-}
-
 resource "aws_security_group" "main" {
   egress = [
     {
@@ -44,22 +28,22 @@ resource "aws_security_group" "main" {
 }
 
 resource "aws_instance" "bot_server" {
-  ami                    = "ami-0b59bfac6be064b78" # See available AMIs here: https://aws.amazon.com/amazon-linux-ami/
+  ami                    = var.AWS_AMI  # See available AMIs here: https://aws.amazon.com/amazon-linux-ami/
   instance_type          = "t2.nano"
   count                  = 1
-  key_name               = "bot-server"
+  key_name               = var.PRIVATE_KEY_NAME
   vpc_security_group_ids = [aws_security_group.main.id]
 
   connection {
     type        = "ssh"
-    user        = "ec2-user"
-    private_key = file("~/.ssh/bot-server.pem")
+    user        = var.REMOTE_USER 
+    private_key = file(var.PRIVATE_KEY_PATH)
     host        = self.public_ip
   }
 
   provisioner "file" {
     source      = "../.env"
-    destination = "/home/ec2-user/.env"
+    destination = "/home/${var.REMOTE_USER}/.env"
   }
 
   provisioner "remote-exec" {
@@ -67,7 +51,7 @@ resource "aws_instance" "bot_server" {
       "sudo yum update -y",
       "sudo yum install docker -y",
       "sudo service docker start",
-      "sudo docker run --pull=always --env-file=/home/ec2-user/.env -d ariel17/golang-telegram-group-manager:latest"
+      "sudo docker run --pull=always --env-file=/home/${var.REMOTE_USER}/.env -d ariel17/golang-telegram-group-manager:latest"
     ]
   }
 
