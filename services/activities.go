@@ -121,7 +121,7 @@ func formatInactives(lang, title string, inactives []repositories.UserActivity) 
 }
 
 func RemoveUser(chatID, userID int64) {
-
+	repository.RemoveUserData(chatID, userID)
 }
 
 func init() {
