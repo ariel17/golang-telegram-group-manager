@@ -28,9 +28,16 @@
 
 ## Execution
 
+### Locally from code
 ```
 $ TELEGRAM_API_TOKEN=xxxx SENTRY_DSN=xxxx go run main.go
+```
 
+### With Docker (recommended)
+
+The `.env` file needs to contain the mentioned environment variables.
+
+```
 $ docker run --env-file .env ariel17/golang-telegram-group-manager:latest
 ```
 
